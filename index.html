@@ -36,7 +36,8 @@
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans KR",system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans KR",system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:anywhere;-webkit-text-size-adjust:100%}
+section{scroll-margin-top:64px}
 .wrap{max-width:760px;margin:0 auto;padding:0 16px}
 h1,h2,h3,.fun{font-family:"Jua","Noto Sans KR",sans-serif;font-weight:400;letter-spacing:-.01em}
 h2{font-size:1.6rem;margin:0 0 4px}
@@ -57,9 +58,11 @@ header.hero{padding:28px 0 8px;text-align:center}
 @keyframes spin{to{transform:rotate(360deg) scale(1.1)}}
 .drip{animation:drip 2.4s ease-in infinite;transform-origin:top}
 @keyframes drip{0%,30%{transform:scaleY(.4);opacity:1}80%{transform:scaleY(1.1);opacity:1}100%{transform:scaleY(1.1);opacity:0}}
-nav.jump{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:18px 0 0}
-nav.jump a{color:var(--ink);text-decoration:none;background:var(--surface);border:1px solid var(--line);padding:6px 14px;border-radius:999px;font-size:.9rem}
-nav.jump a:hover{border-color:var(--red);color:var(--red)}
+/* 바로가기: 스크롤해도 위에 붙어 있는 4칸 */
+nav.jump{position:sticky;top:0;z-index:6;background:color-mix(in srgb,var(--bg) 92%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);padding:10px 0;margin:14px 0 0}
+nav.jump .in{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+nav.jump a{display:flex;align-items:center;justify-content:center;min-height:40px;color:var(--ink);text-decoration:none;background:var(--surface);border:1px solid var(--line);padding:4px 6px;border-radius:999px;font-size:.9rem;font-weight:500;white-space:nowrap;text-align:center}
+nav.jump a:hover,nav.jump a.on{border-color:var(--red);color:var(--red)}
 
 /* 상품 */
 .products{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -80,7 +83,7 @@ nav.jump a:hover{border-color:var(--red);color:var(--red)}
 .calc .name{font-weight:500}
 .calc .unit{font-size:.85rem;color:var(--muted)}
 .step{display:flex;align-items:center;gap:6px}
-.step button{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font-size:1.1rem;line-height:1}
+.step button{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font-size:1.1rem;line-height:1}
 .step button:hover{border-color:var(--red)}
 .step output{min-width:26px;text-align:center;font-weight:700}
 .total{display:flex;justify-content:space-between;align-items:baseline;background:var(--red-soft);border-radius:14px;padding:12px 16px;margin:14px 0}
@@ -89,7 +92,9 @@ nav.jump a:hover{border-color:var(--red);color:var(--red)}
 @keyframes pop{50%{transform:scale(1.15)}}
 textarea{width:100%;min-height:170px;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--surface-2);color:var(--ink);font:inherit;font-size:.9rem;resize:vertical}
 .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.btn{border:0;border-radius:12px;padding:10px 16px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btns.order{display:grid;grid-template-columns:1fr 1fr 1fr}
+.btns.full{display:grid;grid-template-columns:1fr}
+.btn{border:1px solid transparent;border-radius:12px;padding:10px 16px;min-height:46px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-align:center;white-space:nowrap}
 .btn.red{background:var(--red);color:#fff}
 .btn.green{background:var(--leaf);color:#fff}
 .btn.ghost{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)}
@@ -125,7 +130,8 @@ textarea{width:100%;min-height:170px;border:1px solid var(--line);border-radius:
 .tl details{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
 .tl summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;gap:12px;align-items:center}
 .tl summary::-webkit-details-marker{display:none}
-.tl .yr{font-family:"Jua",sans-serif;font-size:1.6rem;color:var(--red);min-width:58px}
+.tl .yr{font-family:"Jua",sans-serif;font-size:1.6rem;color:var(--red);min-width:58px;white-space:nowrap;flex-shrink:0}
+.tl .chev{flex-shrink:0}
 .tl.now .yr{color:var(--honey)}
 .tl .ttl{font-weight:700;line-height:1.35}
 .tl .meta{font-size:.82rem;color:var(--muted)}
@@ -148,6 +154,33 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding:36px 0 48px
 @media (max-width:560px){
   .products,.contact{grid-template-columns:1fr}
   .price .won{font-size:1.3rem}
+  section{padding:32px 0 4px}
+  h2{font-size:1.4rem}
+  .card{padding:16px}
+  header.hero{padding-top:20px}
+  .hero-apple{width:110px;height:110px}
+  .hero p{font-size:.95rem}
+  nav.jump a{font-size:.85rem;padding:4px 2px}
+  .btns.order{grid-template-columns:1fr 1fr}
+  .btns.order .btn:first-child{grid-column:1 / -1}
+  .total b{font-size:1.6rem}
+  .contact .big{font-size:1.25rem}
+  .timeline{padding-left:22px}
+  .timeline:before{left:7px}
+  .tl:before{left:-21px}
+  .tl.now:before{left:-23px}
+  .tl summary{padding:12px 14px;gap:10px}
+  .tl .yr{font-size:1.3rem;min-width:0}
+  .tl .body{padding:0 14px 14px}
+  .tl td,.tl th{padding:7px 4px}
+  .done .big-sanesane{font-size:1.9rem}
+}
+@media (max-width:350px){
+  .wrap{padding:0 12px}
+  nav.jump .in{gap:4px}
+  nav.jump a{font-size:.78rem}
+  .price .won{font-size:1.15rem}
+  .step button{width:36px;height:36px}
 }
 @media (prefers-reduced-motion:reduce){
   .hero-apple,.drip{animation:none}
@@ -179,13 +212,15 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding:36px 0 48px
     <h1><span id="hA"></span> <span class="honey" id="hB"></span> <span class="red" id="hC"></span></h1>
     <p id="hTag"></p>
     <p style="font-size:.88rem" id="hFarmer"></p>
-    <nav class="jump">
+  </header>
+  <nav class="jump" aria-label="바로가기">
+    <div class="in">
       <a href="#now">올해 사과</a>
       <a href="#order">주문 계산기</a>
       <a href="#game">사과 따기</a>
       <a href="#story">지난 이야기</a>
-    </nav>
-  </header>
+    </div>
+  </nav>
 
   <section id="now">
     <h2 id="sTitle"></h2>
@@ -200,7 +235,7 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding:36px 0 48px
       <div id="rows"></div>
       <div class="total"><span>합계 (배송료 포함)</span><b id="total">0원</b></div>
       <textarea id="msg" aria-label="주문 문자 내용"></textarea>
-      <div class="btns">
+      <div class="btns order">
         <button class="btn red" id="copyMsg" type="button">주문 문자 복사</button>
         <a class="btn green" id="smsLink" href="#">문자 보내기</a>
         <a class="btn ghost" id="telLink" href="#">전화 걸기</a>
@@ -216,7 +251,7 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding:36px 0 48px
         <div class="label">입금계좌</div>
         <div class="big" id="aNum"></div>
         <div id="aHolder"></div>
-        <div class="btns"><button class="btn ghost" id="copyAcct" type="button">계좌번호 복사</button></div>
+        <div class="btns full"><button class="btn ghost" id="copyAcct" type="button">계좌번호 복사</button></div>
       </div>
     </div>
   </section>
@@ -430,6 +465,15 @@ function renderStory(){
 
 function renderAll(){ renderTop(); renderCalc(); plant(); renderStory(); }
 renderAll();
+
+/* 바로가기: 지금 보고 있는 칸 표시 */
+if ('IntersectionObserver' in window) {
+  const links = [...document.querySelectorAll('nav.jump a')];
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) links.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id));
+  }), { rootMargin: '-45% 0px -50% 0px' });
+  document.querySelectorAll('section[id]').forEach(s => io.observe(s));
+}
 
 /* 저장된 내용 불러오기 */
 (function(){
