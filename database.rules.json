@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "apple": {
+      "content": {
+        ".read": true,
+        ".write": "auth != null && auth.token.email_verified == true && auth.token.email.toLowerCase() == 'cgn210@cgnmail.net'"
+      }
+    }
+  }
+}

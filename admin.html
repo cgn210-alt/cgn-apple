@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>사과 앱 관리</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fff8ec; --surface:#ffffff; --surface-2:#fff1dc; --ink:#2b1d14; --muted:#7a6656; --line:#f0dcc0;
+  --red:#d62828; --red-deep:#9b1c1c; --red-soft:#fde3e1; --leaf:#2f7d32; --leaf-soft:#e3f2e1; --honey:#f4a91d;
+  --shadow:0 6px 20px rgba(120,60,20,.10);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1b1411; --surface:#261c17; --surface-2:#2f231c; --ink:#f6eadf; --muted:#bba795; --line:#3d2e25;
+    --red:#ef5350; --red-deep:#ff8a80; --red-soft:#3a1f1d; --leaf:#81c784; --leaf-soft:#1f3020; --honey:#ffc045;
+    --shadow:0 6px 20px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1b1411; --surface:#261c17; --surface-2:#2f231c; --ink:#f6eadf; --muted:#bba795; --line:#3d2e25;
+  --red:#ef5350; --red-deep:#ff8a80; --red-soft:#3a1f1d; --leaf:#81c784; --leaf-soft:#1f3020; --honey:#ffc045;
+  --shadow:0 6px 20px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans KR",system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:820px;margin:0 auto;padding:0 16px 120px}
+h1,h2{font-family:"Jua","Noto Sans KR",sans-serif;font-weight:400}
+h1{font-size:1.8rem;margin:24px 0 4px}
+h2{font-size:1.3rem;margin:0 0 4px}
+.muted{color:var(--muted);font-size:.9rem}
+.hidden{display:none !important}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow);margin:16px 0}
+.sub{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0}
+label{display:block;font-size:.85rem;color:var(--muted);margin:10px 0 4px}
+input,textarea,select{width:100%;font:inherit;font-size:.95rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+textarea{min-height:90px;resize:vertical}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--honey);outline-offset:0}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:10px;padding:8px 14px;cursor:pointer;text-decoration:none;display:inline-block}
+.btn:hover{border-color:var(--red)}
+.btn.pri{background:var(--red);border-color:var(--red);color:#fff}
+.btn.sm{padding:4px 10px;font-size:.85rem;font-weight:500}
+.btn.del{color:var(--red-deep)}
+.head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.tools{display:flex;gap:6px;flex-wrap:wrap}
+.price-row{display:grid;grid-template-columns:1fr 1.4fr auto;gap:8px;align-items:center;margin-top:6px}
+.hint{font-size:.8rem;color:var(--muted);margin-top:4px}
+.center{text-align:center;padding:60px 0}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.savebar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -4px 16px rgba(0,0,0,.08);padding:12px 16px;z-index:5}
+.savebar .in{max-width:820px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+#status{font-size:.9rem}
+#status.dirty{color:var(--red-deep);font-weight:700}
+#status.ok{color:var(--leaf)}
+pre{white-space:pre-wrap;background:var(--surface-2);border-radius:10px;padding:10px;font-size:.85rem}
+@media (max-width:560px){ .grid,.grid2{grid-template-columns:1fr} .price-row{grid-template-columns:1fr 1fr auto} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="setupScreen" class="center hidden">
+    <h1>Firebase 설정이 필요합니다</h1>
+    <p class="muted">README.md의 '처음 한 번 설정'을 따라 Firebase 프로젝트를 만들고,<br>설정값을 firebase-config.js에 붙여 넣으면 이 화면에서 내용을 고칠 수 있습니다.</p>
+  </div>
+
+  <div id="loginScreen" class="center hidden">
+    <h1>사과 앱 관리</h1>
+    <p class="muted">관리자 구글 계정으로 로그인하세요.</p>
+    <div id="inappNotice" class="hidden muted" style="margin-bottom:12px">카카오톡 등 앱 안의 브라우저에서는 구글 로그인이 막혀 있습니다.<br>메뉴에서 '다른 브라우저로 열기'를 눌러 주세요.</div>
+    <button class="btn pri" onclick="signIn()">구글 계정으로 로그인</button>
+  </div>
+
+  <div id="deniedScreen" class="center hidden">
+    <h1>수정 권한이 없습니다</h1>
+    <p class="muted"><span id="deniedEmail"></span> 계정은 관리자로 등록되어 있지 않습니다.</p>
+    <button class="btn" onclick="firebase.auth().signOut()">다른 계정으로 로그인</button>
+  </div>
+
+  <div id="appScreen" class="hidden">
+    <div class="topbar">
+      <div>
+        <h1>사과 앱 관리</h1>
+        <div class="muted"><span id="whoami"></span> · <span id="stamp">저장된 내용 없음 (기본 내용 표시 중)</span></div>
+      </div>
+      <div class="tools">
+        <a class="btn" href="./" target="_blank" rel="noopener">앱 보기</a>
+        <button class="btn" onclick="firebase.auth().signOut()">로그아웃</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>맨 위 문구</h2>
+      <label>장소 띠</label><input data-p="hero.place">
+      <div class="grid">
+        <div><label>제목 앞</label><input data-p="hero.titleA"></div>
+        <div><label>제목 가운데 (노란색)</label><input data-p="hero.titleB"></div>
+        <div><label>제목 끝 (빨간색)</label><input data-p="hero.titleC"></div>
+      </div>
+      <label>소개 문구</label><input data-p="hero.tagline">
+      <label>농장 소개</label><input data-p="hero.farmer">
+    </div>
+
+    <div class="card">
+      <div class="head"><h2>올해 상품과 가격</h2><button class="btn sm" onclick="addProduct()">+ 상품 추가</button></div>
+      <div class="grid2">
+        <div><label>제목</label><input data-p="season.title"></div>
+        <div><label>안내 문구</label><input data-p="season.note"></div>
+      </div>
+      <div id="products"></div>
+      <div class="hint">가격은 숫자만 적습니다(예: 25000). 주문 계산기에도 그대로 반영됩니다.</div>
+    </div>
+
+    <div class="card">
+      <h2>주문·입금 정보</h2>
+      <div class="grid">
+        <div><label>담당자 이름</label><input data-p="contact.name"></div>
+        <div><label>소속</label><input data-p="contact.team"></div>
+        <div><label>전화번호</label><input data-p="contact.phone"></div>
+      </div>
+      <div class="grid">
+        <div><label>은행</label><input data-p="account.bank"></div>
+        <div><label>계좌번호</label><input data-p="account.number"></div>
+        <div><label>예금주</label><input data-p="account.holder"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>사과 따기 이야기</h2>
+      <p class="muted" style="margin:0">사과를 하나 딸 때마다 아래 문장이 하나씩 나옵니다. 한 줄에 하나씩 적으세요.</p>
+      <textarea data-p="facts" data-k="lines" style="min-height:220px"></textarea>
+    </div>
+
+    <div class="card">
+      <div class="head"><h2>지난 이야기</h2><button class="btn sm" onclick="addStory()">+ 새 이야기 (맨 위에)</button></div>
+      <p class="muted" style="margin:0">맨 위 이야기가 '올해' 표시로 펼쳐져 보입니다.</p>
+      <div id="stories"></div>
+    </div>
+  </div>
+</div>
+
+<div class="savebar hidden" id="savebar">
+  <div class="in">
+    <span id="status">변경 없음</span>
+    <div class="tools">
+      <button class="btn" onclick="loadDefault()">처음 내용으로 되돌리기</button>
+      <button class="btn pri" id="saveBtn" onclick="save()">저장</button>
+    </div>
+  </div>
+</div>
+
+<script src="apple-data.js?v=1"></script>
+<script src="firebase-config.js?v=1"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+var db, me, S, dirty = false;
+function el(id) { return document.getElementById(id); }
+function screen(id) { ["setupScreen","loginScreen","deniedScreen","appScreen"].forEach(function (s) { el(s).classList.toggle("hidden", s !== id); }); el("savebar").classList.toggle("hidden", id !== "appScreen"); }
+function lc(s) { return String(s || "").toLowerCase(); }
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+function arr(v) { return Array.isArray(v) ? v : (v && typeof v === "object" ? Object.keys(v).map(function (k) { return v[k]; }) : []); }
+function clone(o) { return JSON.parse(JSON.stringify(o)); }
+if (/KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line\//i.test(navigator.userAgent)) el("inappNotice").classList.remove("hidden");
+
+function signIn() {
+  var p = new firebase.auth.GoogleAuthProvider();
+  p.setCustomParameters({ prompt: "select_account" });
+  firebase.auth().signInWithPopup(p).catch(function (e) {
+    if (e.code === "auth/popup-blocked" || e.code === "auth/operation-not-supported-in-this-environment") firebase.auth().signInWithRedirect(p);
+    else if (e.code !== "auth/popup-closed-by-user" && e.code !== "auth/cancelled-popup-request") alert("로그인에 실패했습니다: " + e.message);
+  });
+}
+
+/* 저장된 내용을 편집용 형태로 맞춤 (Firebase는 빈 배열을 지우므로 채워 넣음) */
+function normalize(v) {
+  var d = clone(DEFAULT_CONTENT), o = v ? clone(v) : d;
+  o.hero = Object.assign({}, d.hero, o.hero || {});
+  o.season = Object.assign({}, d.season, o.season || {});
+  o.contact = Object.assign({}, d.contact, o.contact || {});
+  o.account = Object.assign({}, d.account, o.account || {});
+  o.facts = arr(o.facts);
+  o.products = arr(o.products).map(function (p) { p.prices = arr(p.prices); return p; });
+  o.story = arr(o.story).map(function (s) { s.points = arr(s.points); s.head = arr(s.head); s.rows = arr(s.rows).map(arr); return s; });
+  return o;
+}
+
+/* 경로로 값 읽고 쓰기 */
+function getP(path) { return path.split(".").reduce(function (o, k) { return o == null ? undefined : o[k]; }, S); }
+function setP(path, val) {
+  var ks = path.split("."), o = S;
+  for (var i = 0; i < ks.length - 1; i++) o = o[ks[i]];
+  o[ks[ks.length - 1]] = val;
+}
+var pipe = function (a) { return arr(a).join(" | "); };
+var unpipe = function (s) { return String(s).split("|").map(function (x) { return x.trim(); }); };
+function toField(v, k) {
+  if (k === "lines") return arr(v).join("\n");
+  if (k === "pipe") return pipe(v);
+  if (k === "table") return arr(v).map(pipe).join("\n");
+  return v == null ? "" : v;
+}
+function fromField(s, k) {
+  if (k === "lines") return s.split("\n").map(function (x) { return x.trim(); }).filter(Boolean);
+  if (k === "pipe") return s.trim() ? unpipe(s) : [];
+  if (k === "table") return s.split("\n").filter(function (x) { return x.trim(); }).map(unpipe);
+  if (k === "num") return +String(s).replace(/[^0-9]/g, "") || 0;
+  return s;
+}
+function fill() {
+  document.querySelectorAll("[data-p]").forEach(function (f) { f.value = toField(getP(f.dataset.p), f.dataset.k); });
+}
+document.addEventListener("input", function (e) {
+  var f = e.target; if (!f.dataset || !f.dataset.p || !S) return;
+  setP(f.dataset.p, fromField(f.value, f.dataset.k));
+  markDirty(true);
+});
+function markDirty(d) {
+  dirty = d;
+  el("status").textContent = d ? "저장하지 않은 변경이 있습니다" : "변경 없음";
+  el("status").className = d ? "dirty" : "";
+}
+window.addEventListener("beforeunload", function (e) { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+
+/* 상품 */
+function renderProducts() {
+  el("products").innerHTML = S.products.map(function (p, i) {
+    var b = "products." + i;
+    return '<div class="sub">' +
+      '<div class="head"><strong>상품 ' + (i + 1) + '</strong><div class="tools">' +
+        '<button class="btn sm" onclick="move(\'products\',' + i + ',-1)" aria-label="위로">↑</button>' +
+        '<button class="btn sm" onclick="move(\'products\',' + i + ',1)" aria-label="아래로">↓</button>' +
+        '<button class="btn sm del" onclick="removeAt(\'products\',' + i + ')">삭제</button></div></div>' +
+      '<div class="grid2"><div><label>이름</label><input data-p="' + b + '.name"></div>' +
+      '<div><label>색</label><select data-p="' + b + '.color"><option value="green">초록 (알뜰)</option><option value="red">빨강 (선물)</option></select></div></div>' +
+      '<label>설명</label><input data-p="' + b + '.desc">' +
+      '<label>무게별 가격</label>' +
+      p.prices.map(function (x, j) {
+        return '<div class="price-row"><input data-p="' + b + '.prices.' + j + '.kg" placeholder="예: 5kg">' +
+          '<input data-p="' + b + '.prices.' + j + '.price" data-k="num" inputmode="numeric" placeholder="가격(원)">' +
+          '<button class="btn sm del" onclick="removePrice(' + i + ',' + j + ')">삭제</button></div>';
+      }).join("") +
+      '<div style="margin-top:8px"><button class="btn sm" onclick="addPrice(' + i + ')">+ 무게 추가</button></div>' +
+    '</div>';
+  }).join("");
+}
+function addProduct() { S.products.push({ name: "새 상품", color: "red", desc: "", prices: [{ kg: "5kg", price: 0 }] }); renderAll(); markDirty(true); }
+function addPrice(i) { S.products[i].prices.push({ kg: "", price: 0 }); renderAll(); markDirty(true); }
+function removePrice(i, j) { S.products[i].prices.splice(j, 1); renderAll(); markDirty(true); }
+
+/* 지난 이야기 */
+function renderStories() {
+  el("stories").innerHTML = S.story.map(function (s, i) {
+    var b = "story." + i;
+    return '<div class="sub">' +
+      '<div class="head"><strong>' + esc(s.yr || "새 이야기") + (i === 0 ? " · 올해" : "") + '</strong><div class="tools">' +
+        '<button class="btn sm" onclick="move(\'story\',' + i + ',-1)" aria-label="위로">↑</button>' +
+        '<button class="btn sm" onclick="move(\'story\',' + i + ',1)" aria-label="아래로">↓</button>' +
+        '<button class="btn sm del" onclick="removeAt(\'story\',' + i + ')">삭제</button></div></div>' +
+      '<div class="grid"><div><label>연도</label><input data-p="' + b + '.yr"></div>' +
+      '<div><label>날짜</label><input data-p="' + b + '.date" placeholder="2026-11-13"></div>' +
+      '<div><label>부서 · 작성자</label><input data-p="' + b + '.meta"></div></div>' +
+      '<label>제목</label><input data-p="' + b + '.title">' +
+      '<label>강조 문구 (없으면 비워 두기)</label><input data-p="' + b + '.quote">' +
+      '<label>내용 (한 줄에 하나)</label><textarea data-p="' + b + '.points" data-k="lines"></textarea>' +
+      '<label>가격표 제목줄 (칸은 | 로 나눔)</label><input data-p="' + b + '.head" data-k="pipe" placeholder="상품 | 5kg | 10kg">' +
+      '<label>가격표 (한 줄에 한 행, 칸은 | 로 나눔)</label><textarea data-p="' + b + '.rows" data-k="table" placeholder="알뜰 가정용 | 25,000원 | 40,000원"></textarea>' +
+      '<div class="grid2"><div><label>표 아래 메모</label><input data-p="' + b + '.foot"></div>' +
+      '<div><label>원문 주소</label><input data-p="' + b + '.url" placeholder="https://gw.cgntv.net/..."></div></div>' +
+    '</div>';
+  }).join("");
+}
+function addStory() {
+  S.story.unshift({ yr: String(new Date().getFullYear()), date: new Date().toISOString().slice(0, 10), title: "", meta: "", quote: "", points: [], head: [], rows: [], foot: "", url: "" });
+  renderAll(); markDirty(true);
+}
+
+/* 공통 */
+function move(key, i, d) {
+  var a = S[key], j = i + d; if (j < 0 || j >= a.length) return;
+  var t = a[i]; a[i] = a[j]; a[j] = t; renderAll(); markDirty(true);
+}
+function removeAt(key, i) {
+  if (!confirm("이 항목을 지울까요? (저장을 눌러야 실제로 반영됩니다)")) return;
+  S[key].splice(i, 1); renderAll(); markDirty(true);
+}
+function renderAll() { renderProducts(); renderStories(); fill(); }
+function loadDefault() {
+  if (!confirm("처음 내용(사내게시판 공지 기준)으로 화면을 되돌릴까요? 저장을 눌러야 실제로 반영됩니다.")) return;
+  S = normalize(DEFAULT_CONTENT); renderAll(); markDirty(true);
+}
+function stampText(v) {
+  if (!v || !v.updatedAt) return "저장된 내용 없음 (기본 내용 표시 중)";
+  return "마지막 저장 " + new Date(v.updatedAt).toLocaleString("ko-KR", { year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+function save() {
+  var o = clone(S);
+  o.updatedAt = Date.now(); o.updatedBy = me.email;
+  el("saveBtn").disabled = true;
+  db.ref("apple/content").set(o).then(function () {
+    markDirty(false);
+    el("status").textContent = "저장했습니다. 앱에 바로 반영됩니다."; el("status").className = "ok";
+    el("stamp").textContent = stampText(o);
+  }).catch(function (e) { alert("저장하지 못했습니다: " + e.message); })
+    .then(function () { el("saveBtn").disabled = false; });
+}
+
+(function () {
+  if (typeof FIREBASE_CONFIG === "undefined" || !FIREBASE_CONFIG.apiKey) { screen("setupScreen"); return; }
+  firebase.initializeApp(FIREBASE_CONFIG);
+  db = firebase.database();
+  firebase.auth().onAuthStateChanged(function (u) {
+    if (!u) { screen("loginScreen"); return; }
+    me = u;
+    if (lc(u.email) !== lc(MASTER_EMAIL)) { el("deniedEmail").textContent = u.email; screen("deniedScreen"); return; }
+    el("whoami").textContent = u.email;
+    db.ref("apple/content").once("value").then(function (snap) {
+      var v = snap.val();
+      S = normalize(v);
+      el("stamp").textContent = stampText(v);
+      renderAll(); markDirty(false);
+      screen("appScreen");
+    }).catch(function (e) { alert("내용을 불러오지 못했습니다: " + e.message); });
+  });
+})();
+</script>
+</body>
+</html>

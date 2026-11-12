@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>철하네 꿀 부사사과</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fff8ec; --surface:#ffffff; --surface-2:#fff1dc; --ink:#2b1d14; --muted:#7a6656; --line:#f0dcc0;
+  --red:#d62828; --red-deep:#9b1c1c; --red-soft:#fde3e1; --leaf:#2f7d32; --leaf-soft:#e3f2e1; --honey:#f4a91d; --honey-soft:#fff0cc;
+  --shadow:0 6px 20px rgba(120,60,20,.10);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1b1411; --surface:#261c17; --surface-2:#2f231c; --ink:#f6eadf; --muted:#bba795; --line:#3d2e25;
+    --red:#ef5350; --red-deep:#ff8a80; --red-soft:#3a1f1d; --leaf:#81c784; --leaf-soft:#1f3020; --honey:#ffc045; --honey-soft:#3a2d14;
+    --shadow:0 6px 20px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1b1411; --surface:#261c17; --surface-2:#2f231c; --ink:#f6eadf; --muted:#bba795; --line:#3d2e25;
+  --red:#ef5350; --red-deep:#ff8a80; --red-soft:#3a1f1d; --leaf:#81c784; --leaf-soft:#1f3020; --honey:#ffc045; --honey-soft:#3a2d14;
+  --shadow:0 6px 20px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans KR",system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px}
+h1,h2,h3,.fun{font-family:"Jua","Noto Sans KR",sans-serif;font-weight:400;letter-spacing:-.01em}
+h2{font-size:1.6rem;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 20px;font-size:.95rem}
+section{padding:44px 0 8px}
+button{font:inherit;cursor:pointer}
+
+/* 상단 */
+header.hero{padding:28px 0 8px;text-align:center}
+.hero .place{display:inline-block;background:var(--leaf);color:#fff;border-radius:999px;padding:4px 14px;font-size:.85rem;font-weight:500}
+.hero h1{font-size:clamp(2.3rem,9vw,3.6rem);line-height:1.15;margin:14px 0 6px}
+.hero h1 .honey{color:var(--honey);position:relative}
+.hero h1 .red{color:var(--red)}
+.hero p{margin:0 0 6px;color:var(--muted)}
+.hero-apple{width:150px;height:150px;margin:6px auto 0;display:block;animation:bob 3.2s ease-in-out infinite;cursor:pointer}
+.hero-apple.spin{animation:spin .7s ease}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-8px) rotate(3deg)}}
+@keyframes spin{to{transform:rotate(360deg) scale(1.1)}}
+.drip{animation:drip 2.4s ease-in infinite;transform-origin:top}
+@keyframes drip{0%,30%{transform:scaleY(.4);opacity:1}80%{transform:scaleY(1.1);opacity:1}100%{transform:scaleY(1.1);opacity:0}}
+nav.jump{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:18px 0 0}
+nav.jump a{color:var(--ink);text-decoration:none;background:var(--surface);border:1px solid var(--line);padding:6px 14px;border-radius:999px;font-size:.9rem}
+nav.jump a:hover{border-color:var(--red);color:var(--red)}
+
+/* 상품 */
+.products{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow)}
+.prod .tag{display:inline-block;border-radius:999px;padding:3px 12px;font-size:.85rem;font-weight:700;color:#fff}
+.prod.thrift .tag{background:var(--leaf)}
+.prod.gift .tag{background:var(--red)}
+.prod p{margin:10px 0 14px;font-size:.93rem}
+.prices{display:flex;gap:8px}
+.price{flex:1;background:var(--surface-2);border-radius:12px;padding:10px 6px;text-align:center}
+.price .kg{font-size:.85rem;color:var(--muted)}
+.price .won{font-family:"Jua",sans-serif;font-size:1.45rem;color:var(--red-deep)}
+.note{margin-top:12px;font-size:.88rem;color:var(--muted);text-align:center}
+
+/* 계산기 */
+.calc .row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.calc .row:last-of-type{border-bottom:0}
+.calc .name{font-weight:500}
+.calc .unit{font-size:.85rem;color:var(--muted)}
+.step{display:flex;align-items:center;gap:6px}
+.step button{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font-size:1.1rem;line-height:1}
+.step button:hover{border-color:var(--red)}
+.step output{min-width:26px;text-align:center;font-weight:700}
+.total{display:flex;justify-content:space-between;align-items:baseline;background:var(--red-soft);border-radius:14px;padding:12px 16px;margin:14px 0}
+.total b{font-family:"Jua",sans-serif;font-size:1.8rem;color:var(--red-deep);font-weight:400}
+.total b.pop{animation:pop .3s ease}
+@keyframes pop{50%{transform:scale(1.15)}}
+textarea{width:100%;min-height:170px;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--surface-2);color:var(--ink);font:inherit;font-size:.9rem;resize:vertical}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.btn{border:0;border-radius:12px;padding:10px 16px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn.red{background:var(--red);color:#fff}
+.btn.green{background:var(--leaf);color:#fff}
+.btn.ghost{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)}
+.contact{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.contact .label{font-size:.85rem;color:var(--muted)}
+.contact .big{font-family:"Jua",sans-serif;font-size:1.35rem;word-break:keep-all}
+
+/* 사과 따기 */
+.game{position:relative;overflow:hidden;padding-bottom:12px}
+.orchard{position:relative;width:100%;max-width:420px;margin:0 auto;aspect-ratio:1/1.05}
+.orchard svg.tree{position:absolute;inset:0;width:100%;height:100%}
+.pick{position:absolute;width:12%;aspect-ratio:1;border:0;background:none;padding:0;transform:translate(-50%,-50%);transition:transform .15s}
+.pick:hover{transform:translate(-50%,-50%) scale(1.15) rotate(-8deg)}
+.pick svg{width:100%;height:100%;display:block;filter:drop-shadow(0 2px 2px rgba(0,0,0,.2))}
+.pick.falling{transition:transform .7s cubic-bezier(.5,0,.9,.6),opacity .2s .65s;pointer-events:none}
+.basket-count{text-align:center;font-family:"Jua",sans-serif;font-size:1.2rem;margin:4px 0}
+.fact{min-height:3.4em;text-align:center;background:var(--honey-soft);border-radius:14px;padding:10px 14px;margin:10px auto 0;max-width:520px;font-size:.95rem}
+.fact.flash{animation:pop .35s ease}
+.done{display:none;text-align:center;margin-top:14px}
+.done.show{display:block;animation:pop .5s ease}
+.done .pun{font-family:"Jua",sans-serif;font-size:1.5rem;line-height:1.5}
+.done .pun .s{color:var(--red)} .done .pun .n{color:#2b59c3}
+:root[data-theme="dark"] .done .pun .n{color:#8fb0ff}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .done .pun .n{color:#8fb0ff}}
+.done .big-sanesane{font-family:"Jua",sans-serif;font-size:2.2rem;letter-spacing:.05em;margin:6px 0 0}
+
+/* 지난 이야기 */
+.timeline{position:relative;padding-left:26px}
+.timeline:before{content:"";position:absolute;left:9px;top:6px;bottom:6px;width:3px;border-radius:3px;background:linear-gradient(var(--leaf),var(--red))}
+.tl{position:relative;margin-bottom:16px}
+.tl:before{content:"";position:absolute;left:-23px;top:22px;width:14px;height:14px;border-radius:50%;background:var(--red);border:3px solid var(--bg)}
+.tl.now:before{background:var(--honey);width:18px;height:18px;left:-25px;top:20px}
+.tl details{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.tl summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;gap:12px;align-items:center}
+.tl summary::-webkit-details-marker{display:none}
+.tl .yr{font-family:"Jua",sans-serif;font-size:1.6rem;color:var(--red);min-width:58px}
+.tl.now .yr{color:var(--honey)}
+.tl .ttl{font-weight:700;line-height:1.35}
+.tl .meta{font-size:.82rem;color:var(--muted)}
+.tl .chev{margin-left:auto;transition:transform .2s;color:var(--muted)}
+.tl details[open] .chev{transform:rotate(90deg)}
+.tl .body{padding:0 16px 16px}
+.tl ul{margin:0 0 10px;padding-left:18px;font-size:.93rem}
+.tl table{width:100%;border-collapse:collapse;font-size:.9rem}
+.tl th,.tl td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:left}
+.tl th{color:var(--muted);font-weight:500}
+.tl th:not(:first-child),.tl td:not(:first-child){text-align:right}
+.tl td.w{font-weight:700;color:var(--red-deep);white-space:nowrap}
+.tl .src{display:inline-block;margin-top:10px;font-size:.82rem;color:var(--muted)}
+.tl .quote{font-family:"Jua",sans-serif;font-size:1.15rem;background:var(--surface-2);border-radius:12px;padding:8px 12px;margin:0 0 10px}
+
+footer{text-align:center;color:var(--muted);font-size:.82rem;padding:36px 0 48px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:.9rem;transition:transform .25s;z-index:10}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+@media (max-width:560px){
+  .products,.contact{grid-template-columns:1fr}
+  .price .won{font-size:1.3rem}
+}
+@media (prefers-reduced-motion:reduce){
+  .hero-apple,.drip{animation:none}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <radialGradient id="ag" cx="35%" cy="35%" r="70%">
+      <stop offset="0" stop-color="#ff6b6b"/><stop offset=".55" stop-color="#d62828"/><stop offset="1" stop-color="#8e1414"/>
+    </radialGradient>
+    <symbol id="apple" viewBox="0 0 40 40">
+      <path d="M20 12c-3-3-9-4-13 0-5 5-4 15 0 21 3 4 7 6 10 5 1-.4 2-.6 3-.6s2 .2 3 .6c3 1 7-1 10-5 4-6 5-16 0-21-4-4-10-3-13 0z" fill="url(#ag)"/>
+      <ellipse cx="12.5" cy="18" rx="2.6" ry="4.2" fill="#fff" opacity=".35" transform="rotate(20 12.5 18)"/>
+      <path d="M20 12c0-3 1-6 3-8" stroke="#6b4423" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M22 8c3-4 8-4 10-2-3 3-7 4-10 2z" fill="#3a9d3f"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <header class="hero">
+    <span class="place" id="hPlace"></span>
+    <svg class="hero-apple" id="heroApple" viewBox="0 0 40 46" role="img" aria-label="꿀이 흐르는 사과">
+      <use href="#apple" width="40" height="40" y="4"/>
+      <path class="drip" d="M30 17c0 4 1 6 1 8a1.6 1.6 0 0 1-3.2 0c0-2 1-4 1-8z" fill="#f4a91d" opacity=".95"/>
+    </svg>
+    <h1><span id="hA"></span> <span class="honey" id="hB"></span> <span class="red" id="hC"></span></h1>
+    <p id="hTag"></p>
+    <p style="font-size:.88rem" id="hFarmer"></p>
+    <nav class="jump">
+      <a href="#now">올해 사과</a>
+      <a href="#order">주문 계산기</a>
+      <a href="#game">사과 따기</a>
+      <a href="#story">지난 이야기</a>
+    </nav>
+  </header>
+
+  <section id="now">
+    <h2 id="sTitle"></h2>
+    <p class="sub" id="sNote"></p>
+    <div class="products" id="products"></div>
+  </section>
+
+  <section id="order">
+    <h2>주문 계산기</h2>
+    <p class="sub">상자 수를 고르면 합계와 주문 문자가 자동으로 만들어집니다.</p>
+    <div class="card calc">
+      <div id="rows"></div>
+      <div class="total"><span>합계 (배송료 포함)</span><b id="total">0원</b></div>
+      <textarea id="msg" aria-label="주문 문자 내용"></textarea>
+      <div class="btns">
+        <button class="btn red" id="copyMsg" type="button">주문 문자 복사</button>
+        <a class="btn green" id="smsLink" href="#">문자 보내기</a>
+        <a class="btn ghost" id="telLink" href="#">전화 걸기</a>
+      </div>
+    </div>
+    <div class="contact">
+      <div class="card">
+        <div class="label">주문 및 문의</div>
+        <div class="big" id="cName"></div>
+        <div class="big" style="color:var(--red-deep)" id="cPhone"></div>
+      </div>
+      <div class="card">
+        <div class="label">입금계좌</div>
+        <div class="big" id="aNum"></div>
+        <div id="aHolder"></div>
+        <div class="btns"><button class="btn ghost" id="copyAcct" type="button">계좌번호 복사</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="game">
+    <h2>사과 따기</h2>
+    <p class="sub">나무의 사과를 눌러 바구니에 담아 보세요. 하나 딸 때마다 철하네 사과 이야기가 나옵니다.</p>
+    <div class="card game">
+      <div class="orchard" id="orchard">
+        <svg class="tree" viewBox="0 0 100 105" aria-hidden="true">
+          <ellipse cx="50" cy="100" rx="40" ry="4" fill="#000" opacity=".08"/>
+          <path d="M46 98 L47 62 Q44 52 36 46 L39 44 Q47 50 50 56 Q53 48 62 43 L64 46 Q55 52 54 62 L55 98 Z" fill="#7a4b2a"/>
+          <circle cx="50" cy="34" r="27" fill="#3f8f43"/>
+          <circle cx="28" cy="42" r="18" fill="#4a9e4e"/>
+          <circle cx="72" cy="42" r="18" fill="#4a9e4e"/>
+          <circle cx="36" cy="22" r="16" fill="#56ab5a"/>
+          <circle cx="64" cy="22" r="16" fill="#56ab5a"/>
+          <circle cx="50" cy="16" r="14" fill="#62b866"/>
+          <path d="M20 86 h22 l-3 13 h-16 z" fill="#c98b3d"/>
+          <path d="M20 86 h22" stroke="#9c6a2b" stroke-width="2"/>
+          <path d="M23 91 h16 M24 95 h14" stroke="#9c6a2b" stroke-width="1" opacity=".6"/>
+        </svg>
+      </div>
+      <div class="basket-count" id="count">바구니: 0 / 12</div>
+      <div class="fact" id="fact">사과를 눌러 보세요!</div>
+      <div class="done" id="done">
+        <div class="pun"><span class="s">사</span>과를 하면 <span class="n">네</span>가 좋고<br><span class="s">사</span>과를 먹으면 <span class="n">내</span>가 좋다</div>
+        <div class="big-sanesane"><span style="color:var(--red)">사</span>~<span style="color:#2b59c3">네</span>~<span style="color:var(--red)">사</span>~<span style="color:#2b59c3">내</span></div>
+        <div class="sub" style="margin:4px 0 12px">(네가 살고 내가 사네) · 2023년 1월 공지에서</div>
+        <button class="btn red" id="again" type="button">다시 따기</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="story">
+    <h2>지난 이야기</h2>
+    <p class="sub">사내게시판에 올라온 철하네 사과 소식을 모았습니다. 눌러서 펼쳐 보세요.</p>
+    <div class="timeline" id="timeline"></div>
+  </section>
+
+  <footer>사내게시판 전체공지 글(2022–2026)을 바탕으로 만들었습니다. 원문은 그룹웨어 로그인 후 볼 수 있습니다.</footer>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="apple-data.js?v=1"></script>
+<script src="firebase-config.js?v=1"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+const won = n => (+n || 0).toLocaleString('ko-KR') + '원';
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const arr = v => Array.isArray(v) ? v : (v && typeof v === 'object' ? Object.values(v) : []);
+let C = DEFAULT_CONTENT;
+
+/* 상단 사과 */
+$('#heroApple').addEventListener('click', e => {
+  const el = e.currentTarget;
+  el.classList.remove('spin'); void el.getBBox(); el.classList.add('spin');
+  setTimeout(() => el.classList.remove('spin'), 700);
+});
+
+/* 토스트 */
+let toastTimer;
+function toast(t){
+  const el = $('#toast'); el.textContent = t; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
+}
+async function copy(text, done){
+  try { await navigator.clipboard.writeText(text); toast(done); }
+  catch(e){
+    const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta);
+    ta.select(); try { document.execCommand('copy'); toast(done); } catch(_) { toast('복사하지 못했습니다'); }
+    ta.remove();
+  }
+}
+
+/* 상단·상품·연락처 */
+function renderTop(){
+  const h = C.hero || {}, s = C.season || {};
+  $('#hPlace').textContent = h.place || ''; $('#hPlace').hidden = !h.place;
+  $('#hA').textContent = h.titleA || ''; $('#hB').textContent = h.titleB || ''; $('#hC').textContent = h.titleC || '';
+  $('#hTag').textContent = h.tagline || ''; $('#hFarmer').textContent = h.farmer || '';
+  document.title = [h.titleA, h.titleB, h.titleC].filter(Boolean).join(' ') || '철하네 사과';
+  $('#sTitle').textContent = s.title || ''; $('#sNote').textContent = s.note || '';
+  $('#products').innerHTML = arr(C.products).map(p => `
+    <div class="card prod ${p.color === 'green' ? 'thrift' : 'gift'}">
+      <span class="tag">${esc(p.name)}</span>
+      <p>${esc(p.desc)}</p>
+      <div class="prices">${arr(p.prices).map(x => `<div class="price"><div class="kg">${esc(x.kg)}</div><div class="won">${won(x.price)}</div></div>`).join('')}</div>
+    </div>`).join('');
+  const c = C.contact || {}, a = C.account || {};
+  $('#cName').textContent = c.team ? `${c.name} (${c.team})` : (c.name || '');
+  $('#cPhone').textContent = c.phone || '';
+  $('#telLink').href = 'tel:' + phoneDigits();
+  $('#aNum').textContent = [a.bank, a.number].filter(Boolean).join(' ');
+  $('#aHolder').textContent = a.holder ? '예금주 ' + a.holder : '';
+}
+const phoneDigits = () => String((C.contact || {}).phone || '').replace(/[^0-9+]/g, '');
+
+/* 주문 계산기 */
+let items = [], qty = {};
+function renderCalc(){
+  items = [];
+  arr(C.products).forEach((p, i) => arr(p.prices).forEach((x, j) => items.push({id: i + '-' + j, name: p.name, kg: x.kg, price: +x.price || 0})));
+  qty = {}; items.forEach(it => qty[it.id] = 0);
+  $('#rows').innerHTML = items.map(it => `
+    <div class="row">
+      <div><div class="name">${esc(it.name)} ${esc(it.kg)}</div><div class="unit">${won(it.price)}</div></div>
+      <div class="step">
+        <button type="button" data-id="${it.id}" data-d="-1" aria-label="${esc(it.name)} ${esc(it.kg)} 빼기">−</button>
+        <output id="q-${it.id}">0</output>
+        <button type="button" data-id="${it.id}" data-d="1" aria-label="${esc(it.name)} ${esc(it.kg)} 더하기">+</button>
+      </div>
+    </div>`).join('');
+  update(false);
+}
+$('#rows').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  const id = b.dataset.id; qty[id] = Math.max(0, Math.min(99, qty[id] + +b.dataset.d));
+  update(true);
+});
+function buildMsg(sum){
+  const h = C.hero || {};
+  const lines = items.filter(it => qty[it.id] > 0).map(it => `- ${it.name} ${it.kg} × ${qty[it.id]}상자`);
+  return [`[${[h.titleA, h.titleB, h.titleC].filter(Boolean).join(' ')} 주문]`,
+    ...(lines.length ? lines : ['- (상품을 골라 주세요)']),
+    `합계: ${won(sum)} (배송료 포함)`,
+    '', '보내는 분:', '받는 분 / 연락처:', '받는 주소:', '입금자명:'].join('\n');
+}
+function setSms(body){ $('#smsLink').href = 'sms:' + phoneDigits() + '?body=' + encodeURIComponent(body); }
+function update(anim){
+  let sum = 0;
+  items.forEach(it => { $('#q-' + it.id).textContent = qty[it.id]; sum += qty[it.id] * it.price; });
+  const t = $('#total'); t.textContent = won(sum);
+  if(anim){ t.classList.remove('pop'); void t.offsetWidth; t.classList.add('pop'); }
+  const msg = buildMsg(sum);
+  $('#msg').value = msg;
+  setSms(msg);
+}
+$('#msg').addEventListener('input', () => setSms($('#msg').value));
+$('#copyMsg').addEventListener('click', () => copy($('#msg').value, '주문 문자를 복사했습니다'));
+$('#copyAcct').addEventListener('click', () => {
+  const a = C.account || {};
+  copy([a.bank, a.number, a.holder].filter(Boolean).join(' '), '계좌번호를 복사했습니다');
+});
+
+/* 사과 따기 */
+const spots = [[50,12],[35,20],[65,20],[24,34],[50,30],[76,34],[38,40],[62,40],[18,48],[82,48],[44,52],[58,54]];
+let picked = 0, order = [];
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function plant(){
+  const o = $('#orchard');
+  o.querySelectorAll('.pick').forEach(n => n.remove());
+  const facts = arr(C.facts).filter(Boolean);
+  picked = 0; order = shuffle([...facts]);
+  $('#count').textContent = `바구니: 0 / ${spots.length}`;
+  $('#fact').textContent = '사과를 눌러 보세요!';
+  $('#done').classList.remove('show');
+  spots.forEach(([x,y], i) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'pick'; b.setAttribute('aria-label', `사과 ${i+1} 따기`);
+    b.style.left = x + '%'; b.style.top = (y / 105 * 100) + '%';
+    b.innerHTML = '<svg viewBox="0 0 40 40"><use href="#apple"/></svg>';
+    b.addEventListener('click', () => pick(b));
+    o.appendChild(b);
+  });
+}
+function pick(b){
+  const o = $('#orchard').getBoundingClientRect(), r = b.getBoundingClientRect();
+  const tx = o.left + o.width * .31 - (r.left + r.width/2);
+  const ty = o.top + o.height * .84 - (r.top + r.height/2);
+  b.classList.add('falling');
+  b.style.transform = `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) rotate(${Math.random()*80-40}deg) scale(.7)`;
+  b.style.opacity = '0';
+  setTimeout(() => b.remove(), 900);
+  picked++;
+  $('#count').textContent = `바구니: ${picked} / ${spots.length}`;
+  const f = $('#fact'); f.textContent = order.length ? order[(picked - 1) % order.length] : '';
+  f.classList.remove('flash'); void f.offsetWidth; f.classList.add('flash');
+  if(picked === spots.length) setTimeout(() => $('#done').classList.add('show'), 700);
+}
+$('#again').addEventListener('click', plant);
+
+/* 지난 이야기 */
+function renderStory(){
+  $('#timeline').innerHTML = arr(C.story).map((s, i) => `
+    <div class="tl${i === 0 ? ' now' : ''}">
+      <details${i === 0 ? ' open' : ''}>
+        <summary>
+          <span class="yr">${esc(s.yr)}</span>
+          <span><div class="ttl">${esc(s.title)}</div><div class="meta">${esc([s.date, s.meta].filter(Boolean).join(' · '))}</div></span>
+          <span class="chev" aria-hidden="true">▶</span>
+        </summary>
+        <div class="body">
+          ${s.quote ? `<div class="quote">${esc(s.quote)}</div>` : ''}
+          ${arr(s.points).length ? `<ul>${arr(s.points).map(p => `<li>${esc(p)}</li>`).join('')}</ul>` : ''}
+          ${arr(s.rows).length ? `<table>
+            ${arr(s.head).length ? `<tr>${arr(s.head).map(h => `<th>${esc(h)}</th>`).join('')}</tr>` : ''}
+            ${arr(s.rows).map(r => { r = arr(r); return `<tr><td>${esc(r[0])}</td>${r.slice(1).map(c => `<td class="${/원$/.test(c) ? 'w' : ''}">${esc(c)}</td>`).join('')}</tr>`; }).join('')}
+          </table>` : ''}
+          ${s.foot ? `<div class="meta" style="margin-top:6px">${esc(s.foot)}</div>` : ''}
+          ${/^https?:\/\//.test(s.url || '') ? `<a class="src" href="${esc(s.url)}" target="_blank" rel="noopener">원문 보기 (그룹웨어)</a>` : ''}
+        </div>
+      </details>
+    </div>`).join('');
+}
+
+function renderAll(){ renderTop(); renderCalc(); plant(); renderStory(); }
+renderAll();
+
+/* 저장된 내용 불러오기 */
+(function(){
+  if (typeof FIREBASE_CONFIG === 'undefined' || !FIREBASE_CONFIG.apiKey || typeof firebase === 'undefined') return;
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    firebase.database().ref('apple/content').once('value').then(snap => {
+      const v = snap.val();
+      if (v) { C = Object.assign({}, DEFAULT_CONTENT, v); renderAll(); }
+    }).catch(() => {});
+  } catch(e) {}
+})();
+</script>
+</body>
+</html>
