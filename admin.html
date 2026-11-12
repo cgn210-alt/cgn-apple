@@ -58,6 +58,9 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--honey);outline-o
 #status{font-size:.9rem}
 #status.dirty{color:var(--red-deep);font-weight:700}
 #status.ok{color:var(--leaf)}
+#adminList li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px dashed var(--line)}
+#adminList .role{font-size:.8rem;color:var(--muted);margin-left:6px}
+#adminMsg.err{color:var(--red-deep)} #adminMsg.ok{color:var(--leaf)}
 pre{white-space:pre-wrap;background:var(--surface-2);border-radius:10px;padding:10px;font-size:.85rem}
 @media (max-width:560px){ .grid,.grid2{grid-template-columns:1fr} .price-row{grid-template-columns:1fr 1fr auto} }
 </style>
@@ -79,7 +82,7 @@ pre{white-space:pre-wrap;background:var(--surface-2);border-radius:10px;padding:
 
   <div id="deniedScreen" class="center hidden">
     <h1>수정 권한이 없습니다</h1>
-    <p class="muted"><span id="deniedEmail"></span> 계정은 관리자로 등록되어 있지 않습니다.</p>
+    <p class="muted"><span id="deniedEmail"></span> 계정은 관리자로 등록되어 있지 않습니다.<br>마스터에게 이 구글 계정을 부관리자로 등록해 달라고 요청하세요.</p>
     <button class="btn" onclick="firebase.auth().signOut()">다른 계정으로 로그인</button>
   </div>
 
@@ -87,12 +90,23 @@ pre{white-space:pre-wrap;background:var(--surface-2);border-radius:10px;padding:
     <div class="topbar">
       <div>
         <h1>사과 앱 관리</h1>
-        <div class="muted"><span id="whoami"></span> · <span id="stamp">저장된 내용 없음 (기본 내용 표시 중)</span></div>
+        <div class="muted"><span id="whoami"></span> (<span id="role"></span>) · <span id="stamp">저장된 내용 없음 (기본 내용 표시 중)</span></div>
       </div>
       <div class="tools">
         <a class="btn" href="./" target="_blank" rel="noopener">앱 보기</a>
         <button class="btn" onclick="firebase.auth().signOut()">로그아웃</button>
       </div>
+    </div>
+
+    <div class="card hidden" id="adminsCard">
+      <h2>부관리자 관리</h2>
+      <p class="muted" style="margin:0">여기 등록한 구글 계정만 이 화면에서 내용을 고칠 수 있습니다. 등록과 삭제는 바로 반영되고, 마스터만 할 수 있습니다.</p>
+      <ul id="adminList" style="list-style:none;padding:0;margin:12px 0"></ul>
+      <div class="price-row" style="grid-template-columns:1fr auto">
+        <input id="newAdmin" type="email" placeholder="부관리자 구글 계정 (예: name@gmail.com)" autocomplete="off">
+        <button class="btn sm" onclick="addAdmin()">등록</button>
+      </div>
+      <div class="hint" id="adminMsg"></div>
     </div>
 
     <div class="card">
@@ -161,13 +175,14 @@ pre{white-space:pre-wrap;background:var(--surface-2);border-radius:10px;padding:
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
-var db, me, S, dirty = false;
+var db, me, S, dirty = false, isMaster = false;
 function el(id) { return document.getElementById(id); }
 function screen(id) { ["setupScreen","loginScreen","deniedScreen","appScreen"].forEach(function (s) { el(s).classList.toggle("hidden", s !== id); }); el("savebar").classList.toggle("hidden", id !== "appScreen"); }
 function lc(s) { return String(s || "").toLowerCase(); }
 function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
 function arr(v) { return Array.isArray(v) ? v : (v && typeof v === "object" ? Object.keys(v).map(function (k) { return v[k]; }) : []); }
 function clone(o) { return JSON.parse(JSON.stringify(o)); }
+function emailKey(e) { return lc(e).split(".").join(","); }
 if (/KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line\//i.test(navigator.userAgent)) el("inappNotice").classList.remove("hidden");
 
 function signIn() {
@@ -312,6 +327,35 @@ function save() {
     .then(function () { el("saveBtn").disabled = false; });
 }
 
+/* 부관리자 (마스터만) */
+function adminMsg(t, cls) { el("adminMsg").textContent = t; el("adminMsg").className = "hint " + (cls || ""); }
+function loadAdmins() {
+  db.ref("apple/admins").once("value").then(function (snap) {
+    var v = snap.val() || {};
+    var h = '<li><span>' + esc(MASTER_EMAIL) + '<span class="role">마스터</span></span></li>';
+    Object.keys(v).sort().forEach(function (k) {
+      var em = (v[k] && v[k].email) || k.split(",").join(".");
+      h += '<li><span>' + esc(em) + '<span class="role">부관리자</span></span>' +
+        '<button class="btn sm del" data-k="' + esc(k) + '" data-e="' + esc(em) + '" onclick="removeAdmin(this)">삭제</button></li>';
+    });
+    el("adminList").innerHTML = h;
+  }).catch(function (e) { adminMsg("목록을 불러오지 못했습니다: " + e.message, "err"); });
+}
+function addAdmin() {
+  var v = lc(el("newAdmin").value.trim());
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { adminMsg("이메일 주소를 확인해 주세요.", "err"); return; }
+  if (v === lc(MASTER_EMAIL)) { adminMsg("마스터 계정은 항상 수정할 수 있습니다.", "err"); return; }
+  db.ref("apple/admins/" + emailKey(v)).set({ email: v, addedAt: Date.now() }).then(function () {
+    el("newAdmin").value = ""; adminMsg(v + " 계정을 부관리자로 등록했습니다.", "ok"); loadAdmins();
+  }).catch(function (e) { adminMsg("등록하지 못했습니다: " + e.message, "err"); });
+}
+function removeAdmin(b) {
+  if (!confirm(b.dataset.e + " 계정의 수정 권한을 없앨까요?")) return;
+  db.ref("apple/admins/" + b.dataset.k).remove().then(function () {
+    adminMsg(b.dataset.e + " 계정을 삭제했습니다.", "ok"); loadAdmins();
+  }).catch(function (e) { adminMsg("삭제하지 못했습니다: " + e.message, "err"); });
+}
+
 (function () {
   if (typeof FIREBASE_CONFIG === "undefined" || !FIREBASE_CONFIG.apiKey) { screen("setupScreen"); return; }
   firebase.initializeApp(FIREBASE_CONFIG);
@@ -319,17 +363,29 @@ function save() {
   firebase.auth().onAuthStateChanged(function (u) {
     if (!u) { screen("loginScreen"); return; }
     me = u;
-    if (lc(u.email) !== lc(MASTER_EMAIL)) { el("deniedEmail").textContent = u.email; screen("deniedScreen"); return; }
-    el("whoami").textContent = u.email;
-    db.ref("apple/content").once("value").then(function (snap) {
-      var v = snap.val();
-      S = normalize(v);
-      el("stamp").textContent = stampText(v);
-      renderAll(); markDirty(false);
-      screen("appScreen");
-    }).catch(function (e) { alert("내용을 불러오지 못했습니다: " + e.message); });
+    isMaster = lc(u.email) === lc(MASTER_EMAIL);
+    var check = isMaster ? Promise.resolve(true)
+      : db.ref("apple/admins/" + emailKey(u.email)).once("value").then(function (s) { return s.exists(); }).catch(function () { return false; });
+    check.then(function (ok) {
+      if (!ok) { el("deniedEmail").textContent = u.email; screen("deniedScreen"); return; }
+      openEditor(u);
+    });
   });
 })();
+
+function openEditor(u) {
+  el("whoami").textContent = u.email;
+  el("role").textContent = isMaster ? "마스터" : "부관리자";
+  el("adminsCard").classList.toggle("hidden", !isMaster);
+  if (isMaster) loadAdmins();
+  db.ref("apple/content").once("value").then(function (snap) {
+    var v = snap.val();
+    S = normalize(v);
+    el("stamp").textContent = stampText(v);
+    renderAll(); markDirty(false);
+    screen("appScreen");
+  }).catch(function (e) { alert("내용을 불러오지 못했습니다: " + e.message); });
+}
 </script>
 </body>
 </html>

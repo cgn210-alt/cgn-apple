@@ -3,7 +3,14 @@
     "apple": {
       "content": {
         ".read": true,
-        ".write": "auth != null && auth.token.email_verified == true && auth.token.email.toLowerCase() == 'cgn210@cgnmail.net'"
+        ".write": "auth != null && auth.token.email_verified == true && (auth.token.email.toLowerCase() == 'cgn210@cgnmail.net' || root.child('apple/admins').child(auth.token.email.toLowerCase().replace('.', ',')).exists())"
+      },
+      "admins": {
+        ".read": "auth != null && auth.token.email_verified == true && auth.token.email.toLowerCase() == 'cgn210@cgnmail.net'",
+        ".write": "auth != null && auth.token.email_verified == true && auth.token.email.toLowerCase() == 'cgn210@cgnmail.net'",
+        "$key": {
+          ".read": "auth != null && auth.token.email_verified == true && auth.token.email.toLowerCase().replace('.', ',') == $key"
+        }
       }
     }
   }
