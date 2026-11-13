@@ -74,34 +74,10 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--honey);outline-o
 #adminList li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px dashed var(--line)}
 #adminList .role{font-size:.8rem;color:var(--muted);margin-left:6px}
 #adminMsg.err{color:var(--red-deep)} #adminMsg.ok{color:var(--leaf)}
-/* 주문 현황 */
-.live{font-family:"Noto Sans KR",sans-serif;font-size:.75rem;background:var(--leaf);color:#fff;border-radius:999px;padding:2px 8px;vertical-align:middle;margin-left:4px}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
-.stat{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
-.stat .n{font-family:"Jua",sans-serif;font-size:1.5rem;line-height:1.2}
-.stat .w{font-size:.82rem;color:var(--muted)}
-.stat.wait .n{color:var(--red-deep)} .stat.paid .n{color:var(--leaf)}
-.itemsum{width:100%;border-collapse:collapse;font-size:.9rem;margin:4px 0 8px}
-.itemsum th,.itemsum td{border-bottom:1px solid var(--line);padding:6px;text-align:right}
-.itemsum th:first-child,.itemsum td:first-child{text-align:left}
-.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 4px}
-.tabs .btn.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
-.order{border:1px solid var(--line);border-left:5px solid var(--red);border-radius:12px;padding:12px 14px;margin:10px 0;background:var(--surface)}
-.order.paid{border-left-color:var(--leaf)}
-.order .oh{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
-.order .oh b{font-size:1.05rem}
-.badge{font-size:.78rem;font-weight:700;border-radius:999px;padding:1px 9px;background:var(--red-soft);color:var(--red-deep)}
-.order.paid .badge{background:var(--leaf-soft);color:var(--leaf)}
-.order .od{font-size:.9rem;margin-top:6px}
-.order .od div{margin:2px 0}
-.order .od .k{color:var(--muted);display:inline-block;min-width:70px}
-.order .tools{margin-top:10px}
-.order a{color:inherit}
-.order a.btn.pri{color:#fff}
-#orderMsg.err{color:var(--red-deep)}
 pre{white-space:pre-wrap;background:var(--surface-2);border-radius:10px;padding:10px;font-size:.85rem}
-@media (max-width:560px){ .stats{grid-template-columns:1fr 1fr} .stats .stat:first-child{grid-column:1 / -1} .grid,.grid2{grid-template-columns:1fr} .price-row{grid-template-columns:1fr 1fr auto} }
+@media (max-width:560px){ .grid,.grid2{grid-template-columns:1fr} .price-row{grid-template-columns:1fr 1fr auto} }
 </style>
+<link rel="stylesheet" href="orders.css?v=1">
 </head>
 <body>
 <header class="band">
@@ -146,20 +122,9 @@ pre{white-space:pre-wrap;background:var(--surface-2);border-radius:10px;padding:
     </div>
 
     <div class="card" id="ordersCard">
-      <div class="head">
-        <h2>주문 현황 <span class="live">실시간</span></h2>
-        <button class="btn sm" onclick="downloadCsv()">엑셀(CSV) 내려받기</button>
-      </div>
-      <p class="muted" style="margin:0">앱에서 들어온 주문이 바로 보입니다. 입금을 확인하면 '입금 확인·문자 보내기'를 누르세요. 휴대폰 문자 앱이 안내 문구가 채워진 채로 열리고, 전송만 누르면 됩니다.</p>
-      <div class="stats" id="orderStats"></div>
-      <table class="itemsum" id="itemSum"></table>
-      <div class="tabs" id="orderTabs">
-        <button class="btn sm on" data-f="all">전체</button>
-        <button class="btn sm" data-f="new">입금 대기</button>
-        <button class="btn sm" data-f="paid">입금 확인</button>
-      </div>
-      <div class="hint" id="orderMsg">주문을 불러오는 중...</div>
-      <div id="orderList"></div>
+      <h2>주문 현황</h2>
+      <p class="muted" style="margin:0 0 10px">앱에서 들어온 주문이 바로 보입니다. 입금을 확인하면 '입금 확인·문자 보내기'를 누르세요. 휴대폰 문자 앱이 안내 문구가 채워진 채로 열리고, 전송만 누르면 됩니다. 앱의 '주문 내역' 탭에서도 똑같이 볼 수 있습니다.</p>
+      <div id="orderBoard"></div>
     </div>
 
     <div class="card hidden" id="adminsCard">
@@ -238,6 +203,7 @@ pre{white-space:pre-wrap;background:var(--surface-2);border-radius:10px;padding:
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="orders.js?v=1"></script>
 <script>
 var db, me, S, dirty = false, isMaster = false;
 function el(id) { return document.getElementById(id); }
@@ -391,118 +357,6 @@ function save() {
     .then(function () { el("saveBtn").disabled = false; });
 }
 
-/* 주문 현황 (실시간) */
-var orders = [], orderFilter = "all";
-function wonT(n) { return (+n || 0).toLocaleString("ko-KR") + "원"; }
-function dt(t) { return t ? new Date(t).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }) : ""; }
-function digits(s) { return String(s || "").replace(/[^0-9]/g, ""); }
-function itemText(o) { return arr(o.items).map(function (x) { return x.name + " " + (x.kg || "") + " × " + x.qty; }).join(", "); }
-function noticeText(o) {
-  var c = (S && S.contact) || {}, h = (S && S.hero) || {};
-  var title = [h.titleA, h.titleB, h.titleC].filter(Boolean).join(" ") || "철하네 사과";
-  return "[" + title + "]\n" + o.name + "님, 주문하신 사과 대금 " + wonT(o.total) + " 입금이 확인되었습니다.\n" +
-    "주문하신 사과(" + itemText(o) + ") 배송을 시작했습니다.\n주문해 주셔서 감사합니다.\n- " + (c.name || "") + (c.team ? " (" + c.team + ")" : "");
-}
-function smsHref(o) {
-  var ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  return "sms:" + digits(o.phone) + (ios ? "&" : "?") + "body=" + encodeURIComponent(noticeText(o));
-}
-function startOrders() {
-  db.ref("apple/orders").orderByChild("createdAt").on("value", function (snap) {
-    orders = [];
-    snap.forEach(function (c) { var o = c.val(); o.id = c.key; orders.push(o); });
-    orders.forEach(function (o, i) { o.no = i + 1; });
-    renderOrders();
-  }, function (e) { el("orderMsg").textContent = "주문을 불러오지 못했습니다: " + e.message; el("orderMsg").className = "hint err"; });
-}
-function renderOrders() {
-  var wait = orders.filter(function (o) { return o.status !== "paid"; }), paid = orders.filter(function (o) { return o.status === "paid"; });
-  var sum = function (l) { return l.reduce(function (a, o) { return a + (+o.total || 0); }, 0); };
-  el("orderStats").innerHTML =
-    '<div class="stat"><div class="n">' + orders.length + '건</div><div class="w">전체 ' + wonT(sum(orders)) + '</div></div>' +
-    '<div class="stat wait"><div class="n">' + wait.length + '건</div><div class="w">입금 대기 ' + wonT(sum(wait)) + '</div></div>' +
-    '<div class="stat paid"><div class="n">' + paid.length + '건</div><div class="w">입금 확인 ' + wonT(sum(paid)) + '</div></div>';
-  var m = {}, keys = [];
-  orders.forEach(function (o) {
-    arr(o.items).forEach(function (x) {
-      var k = x.name + " " + (x.kg || "");
-      if (!m[k]) { m[k] = { all: 0, paid: 0 }; keys.push(k); }
-      m[k].all += +x.qty || 0; if (o.status === "paid") m[k].paid += +x.qty || 0;
-    });
-  });
-  el("itemSum").innerHTML = keys.length ? "<tr><th>상품별 상자 수</th><th>전체</th><th>입금 확인</th></tr>" + keys.map(function (k) {
-    return "<tr><td>" + esc(k) + "</td><td>" + m[k].all + "상자</td><td>" + m[k].paid + "상자</td></tr>";
-  }).join("") : "";
-  var list = orders.filter(function (o) { return orderFilter === "all" || (orderFilter === "paid") === (o.status === "paid"); }).reverse();
-  el("orderMsg").textContent = orders.length ? "" : "아직 들어온 주문이 없습니다."; el("orderMsg").className = "hint";
-  el("orderList").innerHTML = list.map(function (o) {
-    var p = o.status === "paid";
-    var recv = o.recvName || o.recvPhone ? esc(o.recvName || o.name) + (o.recvPhone ? " · " + esc(o.recvPhone) : "") : "주문하신 분과 같음";
-    var id = "'" + o.id + "'";
-    return '<div class="order' + (p ? " paid" : "") + '">' +
-      '<div class="oh"><b>' + o.no + '. ' + esc(o.name) + '</b><span class="badge">' + (p ? "입금 확인·배송 시작" : "입금 대기") + '</span><span class="muted">' + dt(o.createdAt) + '</span></div>' +
-      '<div class="od">' +
-        '<div><span class="k">주문</span>' + esc(itemText(o)) + ' · <b>' + wonT(o.total) + '</b></div>' +
-        '<div><span class="k">연락처</span><a href="tel:' + digits(o.phone) + '">' + esc(o.phone) + '</a> · 입금자명 ' + esc(o.payer || o.name) + '</div>' +
-        '<div><span class="k">받는 분</span>' + recv + '</div>' +
-        '<div><span class="k">주소</span>' + esc(o.address) + '</div>' +
-        (o.memo ? '<div><span class="k">요청</span>' + esc(o.memo) + '</div>' : '') +
-        (p ? '<div class="muted">' + dt(o.paidAt) + ' 입금 확인' + (o.paidBy ? ' (' + esc(o.paidBy) + ')' : '') + '</div>' : '') +
-      '</div>' +
-      '<div class="tools">' +
-        (p ? '<a class="btn sm" href="' + esc(smsHref(o)) + '" onclick="resend(' + id + ')">안내 문자 다시 보내기</a>' +
-             '<button class="btn sm" onclick="copyNotice(' + id + ')">카톡용 문구 복사</button>' +
-             '<button class="btn sm" onclick="unpay(' + id + ')">입금 대기로 되돌리기</button>'
-           : '<a class="btn sm pri" href="' + esc(smsHref(o)) + '" onclick="return pay(' + id + ')">입금 확인·문자 보내기</a>' +
-             '<button class="btn sm" onclick="copyNotice(' + id + ')">카톡용 문구 복사</button>') +
-        '<button class="btn sm del" onclick="removeOrder(' + id + ')">삭제</button>' +
-      '</div></div>';
-  }).join("");
-}
-function findOrder(id) { return orders.filter(function (o) { return o.id === id; })[0]; }
-function orderErr(e) { alert("반영하지 못했습니다: " + e.message); }
-function pay(id) {
-  var o = findOrder(id); if (!o) return false;
-  if (!confirm(o.name + "님 " + wonT(o.total) + " 입금을 확인했나요?\n확인을 누르면 배송 시작으로 표시하고 문자 앱을 엽니다.")) return false;
-  var now = firebase.database.ServerValue.TIMESTAMP;
-  db.ref("apple/orders/" + id).update({ status: "paid", paidAt: now, paidBy: me.email, notifiedAt: now }).catch(orderErr);
-  return true;
-}
-function resend(id) { db.ref("apple/orders/" + id).update({ notifiedAt: firebase.database.ServerValue.TIMESTAMP }).catch(orderErr); }
-function unpay(id) {
-  var o = findOrder(id); if (!o || !confirm(o.name + "님 주문을 입금 대기로 되돌릴까요?")) return;
-  db.ref("apple/orders/" + id).update({ status: "new", paidAt: null, paidBy: null, notifiedAt: null }).catch(orderErr);
-}
-function removeOrder(id) {
-  var o = findOrder(id); if (!o || !confirm(o.no + ". " + o.name + "님 주문을 삭제할까요? 되돌릴 수 없습니다.")) return;
-  db.ref("apple/orders/" + id).remove().catch(orderErr);
-}
-function copyNotice(id) {
-  var o = findOrder(id); if (!o) return;
-  var t = noticeText(o);
-  var done = function () { alert("안내 문구를 복사했습니다. 카카오톡 대화창에 붙여 넣으세요."); };
-  if (navigator.clipboard) navigator.clipboard.writeText(t).then(done, function () { prompt("아래 문구를 복사하세요", t); });
-  else prompt("아래 문구를 복사하세요", t);
-}
-el("orderTabs").addEventListener("click", function (e) {
-  var b = e.target.closest("button"); if (!b) return;
-  orderFilter = b.dataset.f;
-  [].forEach.call(el("orderTabs").children, function (x) { x.classList.toggle("on", x === b); });
-  renderOrders();
-});
-function downloadCsv() {
-  var q = function (v) { return '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"'; };
-  var rows = [["번호", "주문일시", "상태", "주문자", "연락처", "입금자명", "받는 분", "받는 분 연락처", "주소", "주문 내용", "합계", "요청 사항", "입금 확인일시"]];
-  orders.forEach(function (o) {
-    rows.push([o.no, dt(o.createdAt), o.status === "paid" ? "입금 확인" : "입금 대기", o.name, o.phone, o.payer || o.name,
-      o.recvName || o.name, o.recvPhone || o.phone, o.address, itemText(o), o.total, o.memo, dt(o.paidAt)]);
-  });
-  var blob = new Blob(["﻿" + rows.map(function (r) { return r.map(q).join(","); }).join("\r\n")], { type: "text/csv;charset=utf-8" });
-  var a = document.createElement("a");
-  a.href = URL.createObjectURL(blob); a.download = "사과주문_" + new Date().toISOString().slice(0, 10) + ".csv";
-  document.body.appendChild(a); a.click(); a.remove();
-}
-
 /* 부관리자 (마스터만) */
 function adminMsg(t, cls) { el("adminMsg").textContent = t; el("adminMsg").className = "hint " + (cls || ""); }
 function loadAdmins() {
@@ -556,11 +410,11 @@ function openEditor(u) {
   el("role").textContent = isMaster ? "마스터" : "부관리자";
   el("adminsCard").classList.toggle("hidden", !isMaster);
   if (isMaster) loadAdmins();
-  startOrders();
+  OrderBoard.mount({ db: db, el: el("orderBoard"), content: function () { return S; }, email: function () { return me && me.email; } });
   db.ref("apple/content").once("value").then(function (snap) {
     var v = snap.val();
     S = normalize(v);
-    if (orders.length) renderOrders();
+    OrderBoard.render();
     el("stamp").textContent = stampText(v);
     renderAll(); markDirty(false);
     screen("appScreen");

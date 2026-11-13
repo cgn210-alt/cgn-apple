@@ -1,0 +1,33 @@
+/* 주문 내역 (orders.js) — 색은 각 페이지의 --surface, --line, --red 등 변수를 그대로 씀 */
+.ob-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.ob-live{font-size:.75rem;font-weight:700;background:var(--leaf);color:#fff;border-radius:999px;padding:2px 10px}
+.ob-btn{font:inherit;font-size:.85rem;font-weight:500;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:10px;padding:5px 11px;cursor:pointer;text-decoration:none;display:inline-block;line-height:1.5}
+.ob-btn:hover{border-color:var(--red)}
+.ob-btn.pri{background:var(--red);border-color:var(--red);color:#fff;font-weight:700}
+.ob-btn.del{color:var(--red-deep)}
+.ob-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.ob-stat{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.ob-stat .n{font-family:"Jua","Noto Sans KR",sans-serif;font-size:1.5rem;line-height:1.2}
+.ob-stat .w{font-size:.82rem;color:var(--muted)}
+.ob-stat.wait .n{color:var(--red-deep)}
+.ob-stat.paid .n{color:var(--leaf)}
+.ob-items{width:100%;border-collapse:collapse;font-size:.9rem;margin:4px 0 8px}
+.ob-items th,.ob-items td{border-bottom:1px solid var(--line);padding:6px;text-align:right}
+.ob-items th:first-child,.ob-items td:first-child{text-align:left}
+.ob-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 4px}
+.ob-tabs .ob-btn.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.ob-msg{font-size:.85rem;color:var(--muted);margin-top:4px}
+.ob-msg.err{color:var(--red-deep)}
+.ob-order{border:1px solid var(--line);border-left:5px solid var(--red);border-radius:12px;padding:12px 14px;margin:10px 0;background:var(--surface);text-align:left}
+.ob-order.paid{border-left-color:var(--leaf)}
+.ob-order .oh{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.ob-order .oh b{font-size:1.05rem}
+.ob-order .t{color:var(--muted);font-size:.85rem}
+.ob-badge{font-size:.78rem;font-weight:700;border-radius:999px;padding:1px 9px;background:var(--red-soft);color:var(--red-deep)}
+.ob-order.paid .ob-badge{background:var(--leaf-soft);color:var(--leaf)}
+.ob-order .od{font-size:.9rem;margin-top:6px}
+.ob-order .od div{margin:2px 0}
+.ob-order .od .k{color:var(--muted);display:inline-block;min-width:70px}
+.ob-order .od a{color:inherit}
+.ob-tools{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+@media (max-width:560px){ .ob-stats{grid-template-columns:1fr 1fr} .ob-stats .ob-stat:first-child{grid-column:1 / -1} }

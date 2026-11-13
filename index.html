@@ -60,7 +60,7 @@ header.hero{padding:28px 0 8px;text-align:center}
 @keyframes drip{0%,30%{transform:scaleY(.4);opacity:1}80%{transform:scaleY(1.1);opacity:1}100%{transform:scaleY(1.1);opacity:0}}
 /* 바로가기: 스크롤해도 위에 붙어 있는 4칸 */
 nav.jump{position:sticky;top:0;z-index:6;background:color-mix(in srgb,var(--bg) 92%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);padding:10px 0;margin:14px 0 0}
-nav.jump .in{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+nav.jump .in{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 nav.jump a{display:flex;align-items:center;justify-content:center;min-height:40px;color:var(--ink);text-decoration:none;background:var(--surface);border:1px solid var(--line);padding:4px 6px;border-radius:999px;font-size:.9rem;font-weight:500;white-space:nowrap;text-align:center}
 nav.jump a:hover,nav.jump a.on{border-color:var(--red);color:var(--red)}
 
@@ -112,6 +112,11 @@ textarea{width:100%;min-height:170px;border:1px solid var(--line);border-radius:
 .odone{background:var(--leaf-soft);border-radius:14px;padding:14px 16px;margin-top:12px}
 .odone b{font-family:"Jua",sans-serif;font-size:1.2rem;font-weight:400}
 .alt{font-size:.9rem;color:var(--muted);margin:22px 0 6px}
+/* 주문 내역 (관리자 전용) */
+.gate{text-align:center}
+.gate p{margin:0 0 12px}
+.gate .small{font-size:.85rem;color:var(--muted);margin:12px 0 0}
+.ordwho{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-bottom:10px;word-break:break-all}
 .contact{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
 .contact .label{font-size:.85rem;color:var(--muted)}
 .contact .big{font-family:"Jua",sans-serif;font-size:1.35rem;word-break:keep-all}
@@ -201,6 +206,7 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding:36px 0 48px
   .hero-apple,.drip{animation:none}
 }
 </style>
+<link rel="stylesheet" href="orders.css?v=1">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -234,6 +240,7 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding:36px 0 48px
       <a href="#order">주문하기</a>
       <a href="#game">사과 따기</a>
       <a href="#story">지난 이야기</a>
+      <a href="#orders">주문 내역</a>
     </div>
   </nav>
 
@@ -325,6 +332,27 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding:36px 0 48px
     <div class="timeline" id="timeline"></div>
   </section>
 
+  <section id="orders">
+    <h2>주문 내역</h2>
+    <p class="sub">관리자 전용입니다. 판매 담당자와 관리자로 등록된 구글 계정으로 로그인해야 볼 수 있습니다.</p>
+    <div class="card gate" id="ordGate">
+      <div id="ordLoginBox">
+        <p>관리자 구글 계정으로 로그인하면 주문 내역과 집계가 보입니다.</p>
+        <button class="btn red" id="ordLogin" type="button">구글 계정으로 로그인</button>
+        <p class="small" id="ordInapp" hidden>카카오톡 등 앱 안의 브라우저에서는 구글 로그인이 막혀 있습니다. 메뉴에서 '다른 브라우저로 열기'를 눌러 주세요.</p>
+      </div>
+      <div id="ordDenied" hidden>
+        <p><span id="ordDeniedEmail"></span> 계정은 관리자로 등록되어 있지 않아 주문 내역을 볼 수 없습니다.</p>
+        <button class="btn ghost" id="ordOut2" type="button">다른 계정으로 로그인</button>
+      </div>
+      <p class="small" id="ordWait" hidden>확인하는 중...</p>
+    </div>
+    <div class="card" id="ordWrap" hidden>
+      <div class="ordwho"><span id="ordWho"></span><button class="ob-btn" id="ordOut" type="button">로그아웃</button></div>
+      <div id="orderBoard"></div>
+    </div>
+  </section>
+
   <footer>사내게시판 전체공지 글(2022–2026)을 바탕으로 만들었습니다. 원문은 그룹웨어 로그인 후 볼 수 있습니다.
     <div style="margin-top:14px"><a class="btn ghost" href="admin.html" style="font-size:.85rem;padding:7px 14px">관리자 페이지 열기</a></div>
   </footer>
@@ -336,6 +364,8 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding:36px 0 48px
 <script src="firebase-config.js?v=1"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="orders.js?v=1"></script>
 <script>
 const won = n => (+n || 0).toLocaleString('ko-KR') + '원';
 const $ = s => document.querySelector(s);
@@ -549,6 +579,37 @@ if ('IntersectionObserver' in window) {
   document.querySelectorAll('section[id]').forEach(s => io.observe(s));
 }
 
+/* 주문 내역 (관리자 전용) */
+(function(){
+  if (!fbReady() || !firebase.auth) { $('#ordLogin').disabled = true; return; }
+  if (/KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line\//i.test(navigator.userAgent)) $('#ordInapp').hidden = false;
+  const show = (gate, login, denied, wait) => { $('#ordGate').hidden = !gate; $('#ordLoginBox').hidden = !login; $('#ordDenied').hidden = !denied; $('#ordWait').hidden = !wait; $('#ordWrap').hidden = gate; };
+  const signIn = () => {
+    const p = new firebase.auth.GoogleAuthProvider(); p.setCustomParameters({ prompt: 'select_account' });
+    firebase.auth().signInWithPopup(p).catch(e => {
+      if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') firebase.auth().signInWithRedirect(p);
+      else if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') alert('로그인하지 못했습니다: ' + e.message);
+    });
+  };
+  $('#ordLogin').addEventListener('click', signIn);
+  $('#ordOut').addEventListener('click', () => firebase.auth().signOut());
+  $('#ordOut2').addEventListener('click', () => firebase.auth().signOut().then(signIn));
+  firebase.auth().onAuthStateChanged(u => {
+    OrderBoard.stop();
+    if (!u) { show(true, true, false, false); return; }
+    show(true, false, false, true);
+    const mail = String(u.email || '').toLowerCase();
+    const ok = mail === String(MASTER_EMAIL).toLowerCase() ? Promise.resolve(true)
+      : firebase.database().ref('apple/admins/' + mail.split('.').join(',')).once('value').then(s => s.exists()).catch(() => false);
+    ok.then(yes => {
+      if (!yes) { $('#ordDeniedEmail').textContent = u.email; show(true, false, true, false); return; }
+      $('#ordWho').textContent = u.email + ' 로그인됨';
+      show(false);
+      OrderBoard.mount({ db: firebase.database(), el: $('#orderBoard'), content: () => C, email: () => u.email });
+    });
+  });
+})();
+
 /* 저장된 내용 불러오기 */
 (function(){
   if (typeof FIREBASE_CONFIG === 'undefined' || !FIREBASE_CONFIG.apiKey || typeof firebase === 'undefined') return;
@@ -556,7 +617,7 @@ if ('IntersectionObserver' in window) {
     fbReady();
     firebase.database().ref('apple/content').once('value').then(snap => {
       const v = snap.val();
-      if (v) { C = Object.assign({}, DEFAULT_CONTENT, v); renderAll(); }
+      if (v) { C = Object.assign({}, DEFAULT_CONTENT, v); renderAll(); OrderBoard.render(); }
     }).catch(() => {});
   } catch(e) {}
 })();
