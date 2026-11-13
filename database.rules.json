@@ -11,6 +11,38 @@
         "$key": {
           ".read": "auth != null && auth.token.email_verified == true && auth.token.email.toLowerCase().replace('.', ',') == $key"
         }
+      },
+      "orders": {
+        ".read": "auth != null && auth.token.email_verified == true && (auth.token.email.toLowerCase() == 'cgn210@cgnmail.net' || root.child('apple/admins').child(auth.token.email.toLowerCase().replace('.', ',')).exists())",
+        ".indexOn": ["createdAt"],
+        "$id": {
+          ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email.toLowerCase() == 'cgn210@cgnmail.net' || root.child('apple/admins').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || (!data.exists() && newData.child('status').val() == 'new')",
+          ".validate": "newData.hasChildren(['name', 'phone', 'address', 'items', 'total', 'status', 'createdAt'])",
+          "name": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30" },
+          "phone": { ".validate": "newData.isString() && newData.val().matches(/^0[0-9]{1,2}-[0-9]{3,4}-[0-9]{4}$/)" },
+          "payer": { ".validate": "newData.isString() && newData.val().length <= 30" },
+          "recvName": { ".validate": "newData.isString() && newData.val().length <= 30" },
+          "recvPhone": { ".validate": "newData.isString() && newData.val().length <= 14" },
+          "address": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 200" },
+          "memo": { ".validate": "newData.isString() && newData.val().length <= 200" },
+          "items": {
+            "$i": {
+              ".validate": "newData.hasChildren(['name', 'qty', 'price'])",
+              "name": { ".validate": "newData.isString() && newData.val().length <= 40" },
+              "kg": { ".validate": "newData.isString() && newData.val().length <= 20" },
+              "qty": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 99" },
+              "price": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000000" },
+              "$other": { ".validate": false }
+            }
+          },
+          "total": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000000" },
+          "status": { ".validate": "newData.val() == 'new' || newData.val() == 'paid'" },
+          "createdAt": { ".validate": "newData.isNumber() && (data.exists() ? newData.val() == data.val() : newData.val() == now)" },
+          "paidAt": { ".validate": "newData.isNumber()" },
+          "paidBy": { ".validate": "newData.isString() && newData.val().length <= 100" },
+          "notifiedAt": { ".validate": "newData.isNumber()" },
+          "$other": { ".validate": false }
+        }
       }
     }
   }

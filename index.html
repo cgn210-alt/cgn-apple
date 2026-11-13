@@ -98,6 +98,20 @@ textarea{width:100%;min-height:170px;border:1px solid var(--line);border-radius:
 .btn.red{background:var(--red);color:#fff}
 .btn.green{background:var(--leaf);color:#fff}
 .btn.ghost{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)}
+/* 주문 신청서 */
+.oform label{display:block;font-size:.85rem;color:var(--muted);margin:10px 0 4px}
+.oform label b{color:var(--red)}
+.oform input,.oform .memo{width:100%;min-height:44px;border:1px solid var(--line);border-radius:12px;padding:8px 12px;background:var(--surface-2);color:var(--ink);font:inherit;font-size:.95rem}
+.oform .memo{min-height:70px;resize:vertical}
+.oform input:focus,.oform .memo:focus{outline:2px solid var(--honey);outline-offset:0}
+.oform .two{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.oform .note{font-size:.82rem;color:var(--muted);margin:10px 0 0}
+.oform .err{color:var(--red-deep);font-size:.9rem;margin:8px 0 0;min-height:1.2em}
+.oform .btn{width:100%;margin-top:12px;border:0}
+.oform .btn:disabled{opacity:.6}
+.odone{background:var(--leaf-soft);border-radius:14px;padding:14px 16px;margin-top:12px}
+.odone b{font-family:"Jua",sans-serif;font-size:1.2rem;font-weight:400}
+.alt{font-size:.9rem;color:var(--muted);margin:22px 0 6px}
 .contact{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
 .contact .label{font-size:.85rem;color:var(--muted)}
 .contact .big{font-family:"Jua",sans-serif;font-size:1.35rem;word-break:keep-all}
@@ -161,6 +175,7 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding:36px 0 48px
   .hero-apple{width:110px;height:110px}
   .hero p{font-size:.95rem}
   nav.jump a{font-size:.85rem;padding:4px 2px}
+  .oform .two{grid-template-columns:1fr}
   .btns.order{grid-template-columns:1fr 1fr}
   .btns.order .btn:first-child{grid-column:1 / -1}
   .total b{font-size:1.6rem}
@@ -216,7 +231,7 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding:36px 0 48px
   <nav class="jump" aria-label="바로가기">
     <div class="in">
       <a href="#now">올해 사과</a>
-      <a href="#order">주문 계산기</a>
+      <a href="#order">주문하기</a>
       <a href="#game">사과 따기</a>
       <a href="#story">지난 이야기</a>
     </div>
@@ -229,11 +244,29 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;padding:36px 0 48px
   </section>
 
   <section id="order">
-    <h2>주문 계산기</h2>
-    <p class="sub">상자 수를 고르면 합계와 주문 문자가 자동으로 만들어집니다.</p>
+    <h2>주문하기</h2>
+    <p class="sub">상자 수를 고르고 아래 주문 신청서를 보내 주세요. 입금이 확인되면 문자로 배송 시작을 알려 드립니다.</p>
     <div class="card calc">
       <div id="rows"></div>
       <div class="total"><span>합계 (배송료 포함)</span><b id="total">0원</b></div>
+      <form class="oform" id="oform" novalidate>
+        <div class="two">
+          <div><label for="oName">주문하시는 분 <b>*</b></label><input id="oName" maxlength="30" autocomplete="name"></div>
+          <div><label for="oPhone">연락처 (안내 문자 받을 번호) <b>*</b></label><input id="oPhone" type="tel" inputmode="numeric" maxlength="14" placeholder="010-0000-0000" autocomplete="tel"></div>
+        </div>
+        <label for="oPayer">입금자명 (비우면 주문하시는 분 이름)</label><input id="oPayer" maxlength="30">
+        <div class="two">
+          <div><label for="oRecv">받는 분 (비우면 주문하시는 분)</label><input id="oRecv" maxlength="30"></div>
+          <div><label for="oRecvPhone">받는 분 연락처</label><input id="oRecvPhone" type="tel" inputmode="numeric" maxlength="14"></div>
+        </div>
+        <label for="oAddr">받는 주소 <b>*</b></label><input id="oAddr" maxlength="200" autocomplete="street-address">
+        <label for="oMemo">요청 사항</label><textarea class="memo" id="oMemo" maxlength="200"></textarea>
+        <p class="note">입력하신 정보는 사과 배송과 입금 안내에만 쓰이며, 판매 담당자만 볼 수 있습니다.</p>
+        <div class="err" id="oErr" role="alert"></div>
+        <button class="btn red" id="oSubmit" type="submit">주문 신청하기</button>
+      </form>
+      <div class="odone" id="oDone" hidden></div>
+      <p class="alt">신청서 대신 문자로 주문하셔도 됩니다.</p>
       <textarea id="msg" aria-label="주문 문자 내용"></textarea>
       <div class="btns order">
         <button class="btn red" id="copyMsg" type="button">주문 문자 복사</button>
@@ -396,6 +429,47 @@ function update(anim){
   setSms(msg);
 }
 $('#msg').addEventListener('input', () => setSms($('#msg').value));
+
+/* 주문 신청서 → Firebase apple/orders */
+function fbReady(){
+  if (typeof FIREBASE_CONFIG === 'undefined' || !FIREBASE_CONFIG.apiKey || typeof firebase === 'undefined') return false;
+  if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+  return true;
+}
+$('#oform').addEventListener('submit', e => {
+  e.preventDefault();
+  const v = id => $(id).value.trim();
+  const tel = s => s.replace(/[^0-9]/g, '').replace(/^(\d{2,3})(\d{3,4})(\d{4})$/, '$1-$2-$3');
+  const err = t => { $('#oErr').textContent = t; };
+  const picked = items.filter(it => qty[it.id] > 0);
+  const phone = tel(v('#oPhone')), recvPhone = tel(v('#oRecvPhone'));
+  if (!picked.length) return err('위에서 상자 수를 먼저 골라 주세요.');
+  if (!v('#oName')) return err('주문하시는 분 이름을 적어 주세요.');
+  if (!/^0\d{1,2}-\d{3,4}-\d{4}$/.test(phone)) return err('연락처를 확인해 주세요. (예: 010-1234-5678)');
+  if (recvPhone && !/^0\d{1,2}-\d{3,4}-\d{4}$/.test(recvPhone)) return err('받는 분 연락처를 확인해 주세요.');
+  if (!v('#oAddr')) return err('받는 주소를 적어 주세요.');
+  if (!fbReady()) return err('지금은 신청서를 받을 수 없습니다. 아래 문자 보내기로 주문해 주세요.');
+  const total = picked.reduce((a, it) => a + qty[it.id] * it.price, 0);
+  const order = {
+    name: v('#oName'), phone, payer: v('#oPayer') || v('#oName'),
+    recvName: v('#oRecv'), recvPhone, address: v('#oAddr'), memo: v('#oMemo'),
+    items: picked.map(it => ({ name: it.name, kg: it.kg, qty: qty[it.id], price: it.price })),
+    total, status: 'new', createdAt: firebase.database.ServerValue.TIMESTAMP
+  };
+  err(''); $('#oSubmit').disabled = true; $('#oSubmit').textContent = '보내는 중...';
+  firebase.database().ref('apple/orders').push(order).then(() => {
+    const a = C.account || {};
+    $('#oDone').innerHTML = `<b>주문이 접수되었습니다</b><br>${esc(order.items.map(x => `${x.name} ${x.kg} × ${x.qty}`).join(', '))}<br>
+      아래 계좌로 <strong>${won(total)}</strong>을 <strong>${esc(order.payer)}</strong> 이름으로 입금해 주세요.<br>
+      ${esc([a.bank, a.number].filter(Boolean).join(' '))}${a.holder ? ' (예금주 ' + esc(a.holder) + ')' : ''}<br>
+      입금이 확인되면 ${esc(phone)} 번호로 배송 시작 문자를 드립니다.`;
+    $('#oDone').hidden = false; $('#oform').hidden = true;
+    $('#oDone').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }).catch(() => {
+    err('신청서를 보내지 못했습니다. 잠시 뒤 다시 시도하거나 아래 문자 보내기로 주문해 주세요.');
+    $('#oSubmit').disabled = false; $('#oSubmit').textContent = '주문 신청하기';
+  });
+});
 $('#copyMsg').addEventListener('click', () => copy($('#msg').value, '주문 문자를 복사했습니다'));
 $('#copyAcct').addEventListener('click', () => {
   const a = C.account || {};
@@ -479,7 +553,7 @@ if ('IntersectionObserver' in window) {
 (function(){
   if (typeof FIREBASE_CONFIG === 'undefined' || !FIREBASE_CONFIG.apiKey || typeof firebase === 'undefined') return;
   try {
-    firebase.initializeApp(FIREBASE_CONFIG);
+    fbReady();
     firebase.database().ref('apple/content').once('value').then(snap => {
       const v = snap.val();
       if (v) { C = Object.assign({}, DEFAULT_CONTENT, v); renderAll(); }
